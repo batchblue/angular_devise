@@ -71,6 +71,10 @@ describe('Provider: Devise.Auth', function () {
             testPathConfigure('resetPassword', 'PUT');
         });
 
+        it('.sendConfirmationInstructionsPath', function() {
+            testPathConfigure('sendConfirmationInstructions', 'POST');
+        });
+
         it('.loginMethod', function() {
             testPathConfigure('login', 'GET', true);
         });
@@ -89,6 +93,10 @@ describe('Provider: Devise.Auth', function () {
 
         it('.resetPasswordMethod', function() {
             testPathConfigure('resetPassword', 'GET', true);
+        });
+
+        it('.sendConfirmationInstructionsMethod', function() {
+            testPathConfigure('sendConfirmationInstructions', 'GET', true);
         });
 
         it('.parse', function() {
@@ -479,6 +487,54 @@ describe('Provider: Devise.Auth', function () {
 
             expect(callback).toHaveBeenCalledWith(jasmine.any(Object), user);
         });
+    });
+
+    describe('.sendConfirmationInstructions', function() {
+      var user;
+      var postCallback;
+      function constantTrue() {
+        return true;
+      }
+      function callbackWraper(data) {
+        data = JSON.parse(data);
+        return postCallback(data);
+      }
+
+      beforeEach(function() {
+        postCallback = constantTrue;
+        $httpBackend.expect('POST', '/users/confirmation.json', callbackWraper).respond("");
+      });
+      afterEach(function() {
+        $httpBackend.verifyNoOutstandingExpectation();
+        $httpBackend.verifyNoOutstandingRequest();
+      });
+
+      it('POSTs to /users/confirmation.json', function() {
+        Auth.sendConfirmationInstructions();
+        $httpBackend.flush();
+      });
+
+      it('POSTs email data', function() {
+        var u = {user: {email: 'new_email'}};
+        postCallback = function(data) {
+          return jsonEquals(data.user, u);
+        };
+        Auth.sendConfirmationInstructions(u);
+        $httpBackend.flush();
+      });
+
+      it('returns a promise', function() {
+        expect(Auth.sendConfirmationInstructions().then).toBeDefined();
+        $httpBackend.flush();
+      });
+
+      it('broadcasts the send-confirmation-instructions-successfully event after a sucessful sendConfirmationInstructions', function() {
+        var callback = jasmine.createSpy('callback');
+        $rootScope.$on('devise:send-confirmation-instructions-successfully', callback);
+
+        Auth.sendConfirmationInstructions();
+        $httpBackend.flush();
+      });
     });
 
     describe('.parse', function() {

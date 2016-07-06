@@ -7,7 +7,8 @@ devise.provider('Auth', function AuthProvider() {
         logout: '/users/sign_out.json',
         register: '/users.json',
         sendResetPasswordInstructions: '/users/password.json',
-        resetPassword: '/users/password.json'
+        resetPassword: '/users/password.json',
+        sendConfirmationInstructions: '/users/confirmation.json',
     };
 
     /**
@@ -18,7 +19,8 @@ devise.provider('Auth', function AuthProvider() {
         logout: 'DELETE',
         register: 'POST',
         sendResetPasswordInstructions: 'POST',
-        resetPassword: 'PUT'
+        resetPassword: 'PUT',
+        sendConfirmationInstructions: 'POST'
     };
 
     /**
@@ -316,6 +318,31 @@ devise.provider('Auth', function AuthProvider() {
                     .then(service.parse)
                     .then(save)
                     .then(broadcast('reset-password-successfully'));
+            },
+
+            /**
+             * A function to send the confirmation instructions to the
+             * user email.
+             * By default, `sendConfirmationInstructions` will POST to '/users/confirmation.json'.
+             *
+             * The path and HTTP method used to send instructions are configurable
+             * using
+             *
+             *  angular.module('myModule', ['Devise']).
+             *  config(function(AuthProvider) {
+             *      AuthProvider.sendConfirmationInstructionsPath('path/on/server.json');
+             *      AuthProvider.sendConfirmationInstructionsMethod('POST');
+             *  });
+             *
+             * @param {Object} [creds] A hash containing user email.
+             * @returns {Promise} A $http promise that will be resolved or
+             *                  rejected by the server.
+             */
+            sendConfirmationInstructions: function(creds) {
+                creds = creds || {};
+                return $http(httpConfig('sendConfirmationInstructions', creds))
+                    .then(service.parse)
+                    .then(broadcast('send-confirmation-instructions-successfully'));
             },
 
             /**
